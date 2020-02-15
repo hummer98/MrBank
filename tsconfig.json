@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noUnusedLocals": true,
+    "outDir": "functions/lib",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2018",
+    "allowJs": true
+  },
+  "compileOnSave": true,
+  "include": ["functions/src"]
+}
