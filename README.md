@@ -1,15 +1,29 @@
-# MrBank
+# Mr.Bank
 
+Mr.Bank is an accounting system.
+
+- [x] High availability
+- [x] High throughput
+- [x] High security
 
 ## Architecture
 
+__Account__
 ```
-/banks/{bank}/branches/{branch}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+/account/v1/accounts/{uid}
 ```
 
+__AccountConfiguration__
 ```
-/banks/{bank}/branches/{branch}/accounts/{account}
+/account/v1/accountConfigurations/{uid}
 ```
+
+__Balance__
+```
+/account/v1/balances/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+```
+
+
 
 ### Transfer
 
