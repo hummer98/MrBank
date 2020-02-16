@@ -1,23 +1,27 @@
 import { firestore } from 'firebase-admin'
 import { Transaction, ShardedTransaction } from '../models/Transaction'
 import { ShardType, randomShard } from '../util/Shard'
-import { Dayjs } from 'dayjs'
+import * as Dayjs from 'dayjs'
+
+const system = () => firestore().collection('account').doc('v1')
 
 export default class TransactionController {
 
 	static async transfer<T extends Transaction>(data: T, fromShardCharacters: ShardType[], toShardCharacters: ShardType[]) {
 		const amount = data.amount
 		const timestamp = firestore.Timestamp.now()
-		const dayjs = new Dayjs(timestamp.toDate())
+		const dayjs = Dayjs(timestamp.toDate())
 		const year = dayjs.year()
 		const month = dayjs.month()
 		const date = dayjs.date()
-		const fromTransactionRef = data.from
+		const fromRef = system().collection('accounts').doc(data.from)
+		const toRef = system().collection('accounts').doc(data.to)
+		const fromTransactionRef = fromRef
 			.collection('years').doc(`${year}`)
 			.collection('months').doc(`${month}`)
 			.collection('days').doc(`${date}`)
 			.collection('transactions').doc()
-		const toTransactionRef = data.to
+		const toTransactionRef = toRef
 			.collection('years').doc(`${year}`)
 			.collection('months').doc(`${month}`)
 			.collection('days').doc(`${date}`)
@@ -28,8 +32,8 @@ export default class TransactionController {
 				// amount
 				const fromShard = randomShard(fromShardCharacters)
 				const toShard = randomShard(toShardCharacters)
-				const from = data.from.collection(data.currency).doc(fromShard)
-				const to = data.to.collection(data.currency).doc(toShard)
+				const from = fromRef.collection(data.currency).doc(fromShard)
+				const to = toRef.collection(data.currency).doc(toShard)
 				const fromSnapshot = await transaction.get(from)
 				const toSnapshot = await transaction.get(to)
 				const fromData = (fromSnapshot.data() || { amount: 0 })

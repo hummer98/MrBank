@@ -26,8 +26,8 @@ export const create = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('invalid-argument', '`amount` must be at least 100.')
 	}
 	const [fromConfigurationSnapshot, toConfigurationSnapshot] = await Promise.all([
-		system().collection('accountConfigurations').doc(from.id).get(),
-		system().collection('accountConfigurations').doc(to.id).get()
+		system().collection('accountConfigurations').doc(from).get(),
+		system().collection('accountConfigurations').doc(to).get()
 	])
 	const fromConfiguration = fromConfigurationSnapshot?.data() as AccountConfiguration | undefined
 	const toConfiguration = toConfigurationSnapshot?.data() as AccountConfiguration | undefined

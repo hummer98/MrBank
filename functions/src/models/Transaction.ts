@@ -3,8 +3,8 @@ import { Currency } from '../util/Currency'
 import { ShardType } from '../util/Shard'
 
 export interface Transaction {
-	from: firestore.DocumentReference
-	to: firestore.DocumentReference
+	from: string
+	to: string
 	currency: Currency
 	amount: number
 	executionTime: firestore.Timestamp | firestore.FieldValue

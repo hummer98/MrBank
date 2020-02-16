@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin'
+import * as Dayjs from 'dayjs'
 var serviceAccount = require("../secret.json")
 
 admin.initializeApp({
@@ -8,11 +9,17 @@ admin.initializeApp({
 
 export const playground = async () => {
 
-	try {
-		await admin.firestore().collection('hoge').doc('ee').create({ a: "hoge" })
-	} catch (error) {
-		console.log(error)
-	}
+	const now = admin.firestore.Timestamp.now()
+	const day = Dayjs(now.toDate())
+	console.log(day.year())
+	// try {
+	// 	await admin.firestore()
+	// 	.collection('account').doc('v1')
+	// 	.collection('accounts').doc('uid')
+	// 	.collection('JPY').doc('s')
+	// } catch (error) {
+	// 	console.log(error)
+	// }
 }
 
 playground()
