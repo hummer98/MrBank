@@ -27,13 +27,15 @@ export default class TransactionController {
 		const month = dayjs.month()
 		const date = dayjs.date()
 
-		const from = data.from
+		const from = data.from.parent.parent!
+			.collection('balances').doc(data.from.id)
 			.collection('years').doc(`${year}`)
 			.collection('months').doc(`${month}`)
 			.collection('days').doc(`${date}`)
 			.collection('transactions').doc()
 
-		const to = data.to
+		const to = data.to.parent.parent!
+			.collection('balances').doc(data.to.id)
 			.collection('years').doc(`${year}`)
 			.collection('months').doc(`${month}`)
 			.collection('days').doc(`${date}`)

@@ -1,9 +1,13 @@
 {
   "functions": {
-		"source": ".",
+    "source": ".",
     "predeploy": [
       "npm run lint",
       "npm run build"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }

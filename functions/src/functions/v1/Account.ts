@@ -2,7 +2,7 @@ import { firestore } from 'firebase-admin'
 import * as functions from 'firebase-functions'
 import { Account } from '../../models/Account'
 
-const system = firestore().collection('account').doc('v1')
+const system = () => firestore().collection('account').doc('v1')
 
 export const create = functions.https.onCall(async (data, context) => {
 	if (!context.auth) {
@@ -12,7 +12,7 @@ export const create = functions.https.onCall(async (data, context) => {
 	const uid: string = context.auth.uid
 	const { isAvailable, defaultCurrency }: Partial<Account> = data
 	try {
-		const documentReference = system.collection('accounts').doc(uid)
+		const documentReference = system().collection('accounts').doc(uid)
 		const documentData: Partial<Account> = {
 			isAvailable,
 			defaultCurrency,
@@ -34,7 +34,7 @@ export const update = functions.https.onCall(async (data, context) => {
 	const uid: string = context.auth.uid
 	const { isAvailable, defaultCurrency }: Partial<Account> = data
 	try {
-		const documentReference = system.collection('accounts').doc(uid)
+		const documentReference = system().collection('accounts').doc(uid)
 		const documentData: Partial<Account> = {
 			isAvailable,
 			defaultCurrency,
