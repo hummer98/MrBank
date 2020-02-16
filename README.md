@@ -1,6 +1,7 @@
 # Mr.Bank
 
 Mr.Bank is an accounting system.
+Designed for high security, high availability and high throughput.
 
 - [x] High availability
 - [x] High throughput
