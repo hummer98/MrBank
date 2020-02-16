@@ -33,6 +33,10 @@ __Bank__
 ```
 
 ```
+/account/v1/banks/{uid}/{currency}/{shard}
+```
+
+```
 /account/v1/banks/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
 ```
 
