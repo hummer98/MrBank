@@ -19,7 +19,7 @@ __Account__
 ```
 
 ```
-/account/v1/accounts/{uid}/transactions/{transaction}
+/account/v1/accounts/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
 ```
 
 __AccountConfiguration__
