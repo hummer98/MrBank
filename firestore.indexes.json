@@ -1,4 +1,17 @@
 {
-  "indexes": [],
+  "indexes": [{
+		"collectionGroup": "transactions",
+		"queryScope": "COLLECTION",
+		"fields": [
+			{
+				"fieldPath": "shard",
+				"order": "DESCENDING"
+			},
+			{
+				"fieldPath": "createTime",
+				"order": "DESCENDING"
+			}
+		]
+	}],
   "fieldOverrides": []
 }

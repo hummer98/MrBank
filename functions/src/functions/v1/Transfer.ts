@@ -1,9 +1,11 @@
 import { firestore } from 'firebase-admin'
 import * as functions from 'firebase-functions'
 import { Transaction } from '../../models/Transaction'
-import { DafaultShardCharacters, randomShard } from '../../util/Shard'
+import { DafaultShardCharacters } from '../../util/Shard'
 import TransactionController from '../../controllers/TransactionController'
 import { AccountConfiguration } from '../../models/AccountConfiguration'
+
+const system = () => firestore().collection('account').doc('v1')
 
 export const create = functions.https.onCall(async (data, context) => {
 	if (!context.auth) {
@@ -24,15 +26,13 @@ export const create = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('invalid-argument', '`amount` must be at least 100.')
 	}
 	const [fromConfigurationSnapshot, toConfigurationSnapshot] = await Promise.all([
-		from.parent.parent?.collection('accountConfigurations').doc(from.id).get(),
-		to.parent.parent?.collection('accountConfigurations').doc(to.id).get()
+		system().collection('accountConfigurations').doc(from.id).get(),
+		system().collection('accountConfigurations').doc(to.id).get()
 	])
 	const fromConfiguration = fromConfigurationSnapshot?.data() as AccountConfiguration | undefined
 	const toConfiguration = toConfigurationSnapshot?.data() as AccountConfiguration | undefined
 	const fromShardCharcters = fromConfiguration?.shardhardCharacters || DafaultShardCharacters
 	const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
-	const fromShard = randomShard(fromShardCharcters)
-	const toShard = randomShard(toShardCharcters)
 	try {
 		const transaction: Transaction = {
 			from,
@@ -41,7 +41,7 @@ export const create = functions.https.onCall(async (data, context) => {
 			amount,
 			executionTime: executionTime || firestore.FieldValue.serverTimestamp()
 		}
-		const result = await TransactionController.transfer(transaction, fromShard, toShard)
+		const result = await TransactionController.transfer(transaction, fromShardCharcters, toShardCharcters)
 		return result
 	} catch (error) {
 		throw error
