@@ -14,16 +14,36 @@ __Account__
 /account/v1/accounts/{uid}
 ```
 
+```
+/account/v1/accounts/{uid}/{currency}/{shard}
+```
+
+```
+/account/v1/accounts/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+```
+
 __AccountConfiguration__
 ```
 /account/v1/accountConfigurations/{uid}
 ```
 
-__Balance__
+__Bank__
 ```
-/account/v1/balances/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+/account/v1/banks/{uid}
 ```
 
+```
+/account/v1/banks/{uid}/{currency}/{shard}
+```
+
+```
+/account/v1/banks/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+```
+
+__BankConfiguration__
+```
+/account/v1/bankConfigurations/{uid}
+```
 
 
 ### Transfer
