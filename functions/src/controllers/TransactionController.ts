@@ -106,8 +106,8 @@ export default class TransactionController {
 				// amount
 				const fromShard = randomShard(IDs)
 				const toShard = randomShard(toShardCharacters)
-				const from = fromRef.collection(data.currency).doc(fromShard)
-				const to = toRef.collection(data.currency).doc(toShard)
+				const from = fromRef.collection("balances").doc(data.currency).collection(`shards`).doc(fromShard)
+				const to = toRef.collection("balances").doc(data.currency).collection(`shards`).doc(toShard)
 				const fromSnapshot = await transaction.get(from)
 				const toSnapshot = await transaction.get(to)
 				const fromData = fromSnapshot.data() || { amount: 0 }

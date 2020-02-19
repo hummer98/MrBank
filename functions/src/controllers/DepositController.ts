@@ -73,7 +73,7 @@ export default class TransactionController {
 
 				// amount
 				const toShard: ShardType = randomShard(toShardCharacters)
-				const to = toRef.collection(data.currency).doc(toShard)
+				const to = toRef.collection("balances").doc(data.currency).collection(`shards`).doc(toShard)
 				const toSnapshot = await transaction.get(to)
 				const toData = toSnapshot.data() || { amount: 0 }
 				const toAmount = toData.amount + amount

@@ -92,7 +92,7 @@ export default class TransactionController {
 
 				// amount
 				const fromShard = randomShard(fromShardCharacters)
-				const from = fromRef.collection(data.currency).doc(fromShard)
+				const from = fromRef.collection("balances").doc(data.currency).collection(`shards`).doc(fromShard)
 				const fromSnapshot = await transaction.get(from)
 				const fromData = fromSnapshot.data() || { amount: 0 }
 				if (currentAmount < amount) {
