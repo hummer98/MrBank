@@ -15,7 +15,7 @@ __Account__
 ```
 
 ```
-/account/v1/accounts/{uid}/{currency}/{balances}
+/account/v1/accounts/{uid}/{balances}/{currency}/{shard}
 ```
 
 ```
