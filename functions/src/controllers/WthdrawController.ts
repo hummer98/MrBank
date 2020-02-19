@@ -1,45 +1,34 @@
 import { firestore } from 'firebase-admin'
-import * as Transfer from '../models/Transfer'
+import * as Withdraw from '../models/Withdraw'
 import { TransactionType } from '../models/Transaction'
 import { AccountConfiguration } from '../models/AccountConfiguration'
-import { ShardType, randomShard, DafaultShardCharacters } from '../util/Shard'
+import { randomShard, DafaultShardCharacters } from '../util/Shard'
 import * as Dayjs from 'dayjs'
 
 const system = () => firestore().collection('account').doc('v1')
 
 export default class TransactionController {
 
-	static async request<Request extends Transfer.Request>(data: Request) {
+	static async request<Request extends Withdraw.Request>(data: Request) {
 		const amount = data.amount
 		const transactionRef = system().collection('transactions').doc()
 		const fromRef = system().collection('accounts').doc(data.from)
-		const toRef = system().collection('accounts').doc(data.to)
 		const timestamp = firestore.Timestamp.now()
 		const dayjs = Dayjs(timestamp.toDate())
 		const expire = dayjs.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const toConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.to).get()
-		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const fromConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.from).get()
+		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
+		const fromShardCharacters = fromConfiguration?.shardhardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
-				const [fromAccount, toAccount] = await Promise.all([
-					transaction.get(fromRef),
-					transaction.get(toRef)
-				])
+				const fromAccount = await transaction.get(fromRef)
 				const fromAccountData = fromAccount.data()
-				const toAccountData = toAccount.data()
 				if (!fromAccountData) {
 					throw new Error(`This account is not available. uid: ${data.from}`)
 				}
-				if (!toAccountData) {
-					throw new Error(`This account is not available. uid: ${data.to}`)
-				}
 				if (!fromAccountData.isAvailable) {
 					throw new Error(`This account is not available. uid: ${data.from}`)
-				}
-				if (!toAccountData.isAvailable) {
-					throw new Error(`This account is not available. uid: ${data.to}`)
 				}
 				const snapshot = await transaction.get(fromRef.collection(data.currency))
 				const currentAmount = snapshot.docs.reduce((prev, current) => {
@@ -50,10 +39,10 @@ export default class TransactionController {
 				if (currentAmount < amount) {
 					throw new Error(`Out of balance. ${currentAmount}`)
 				}
-				const documentData: Transfer.Authorization = {
+				const documentData: Withdraw.Authorization = {
 					...data,
 					shard,
-					toShardCharacters: toShardCharcters,
+					fromShardCharacters: fromShardCharacters,
 					isConfirmed: true,
 					expireTime: firestore.Timestamp.fromDate(expire)
 				}
@@ -71,66 +60,51 @@ export default class TransactionController {
 		if (!tran) {
 			throw new Error(`This transaction is not available. uid: ${ref.id}`)
 		}
-		const data = tran.data() as Transfer.Authorization | undefined
+		const data = tran.data() as Withdraw.Authorization | undefined
 		if (!data) {
 			throw new Error(`This transaction is not data. uid: ${ref.id}`)
 		}
-		const type: TransactionType = 'transfer'
+		const type: TransactionType = 'withdraw'
 		const amount = data.amount
-		const toShardCharacters = data.toShardCharacters
+		const fromShardCharacters = data.fromShardCharacters
 		const timestamp = firestore.Timestamp.now()
 		const dayjs = Dayjs(timestamp.toDate())
 		const year = dayjs.year()
 		const month = dayjs.month()
 		const date = dayjs.date()
 		const fromRef = system().collection('accounts').doc(data.from)
-		const toRef = system().collection('accounts').doc(data.to)
 		const fromTransactionRef = fromRef
-			.collection('years').doc(`${year}`)
-			.collection('months').doc(`${year}-${month}`)
-			.collection('days').doc(`${year}-${month}-${date}`)
-			.collection('transactions').doc(ref.id)
-		const toTransactionRef = toRef
 			.collection('years').doc(`${year}`)
 			.collection('months').doc(`${year}-${month}`)
 			.collection('days').doc(`${year}-${month}-${date}`)
 			.collection('transactions').doc(ref.id)
 		try {
 			const result = await firestore().runTransaction(async transaction => {
-				const snapshot = await fromRef.collection(data.currency).where('amount', '>=', data.amount).get()
+				const snapshot = await transaction.get(fromRef.collection(data.currency))
 				if (snapshot.docs.length > 0) {
 					throw new Error(`Out of balance. ${fromRef.path}`)
 				}
-				const IDs = snapshot.docs.map(doc => doc.id) as ShardType[]
+				const currentAmount = snapshot.docs.reduce((prev, current) => {
+					const data = (current.data() || { amount: 0 })
+					const amount = data.amount
+					return prev + amount
+				}, 0)
 
 				// amount
-				const fromShard = randomShard(IDs)
-				const toShard = randomShard(toShardCharacters)
+				const fromShard = randomShard(fromShardCharacters)
 				const from = fromRef.collection(data.currency).doc(fromShard)
-				const to = toRef.collection(data.currency).doc(toShard)
 				const fromSnapshot = await transaction.get(from)
-				const toSnapshot = await transaction.get(to)
 				const fromData = fromSnapshot.data() || { amount: 0 }
-				const toData = toSnapshot.data() || { amount: 0 }
+				if (currentAmount < amount) {
+					throw new Error(`Out of balance. ${fromRef.path}`)
+				}
 				const fromAmount = fromData.amount - amount
-				const toAmount = toData.amount + amount
 
 				// transaction
-				const fromTransaction: Transfer.Transaction = {
+				const fromTransaction: Withdraw.Transaction = {
 					type,
 					shard: fromShard,
 					from: data.from,
-					to: data.to,
-					currency: data.currency,
-					amount: data.amount,
-					createTime: firestore.FieldValue.serverTimestamp(),
-					updateTime: firestore.FieldValue.serverTimestamp()
-				}
-				const toTransaction: Transfer.Transaction = {
-					type,
-					shard: toShard,
-					from: data.from,
-					to: data.to,
 					currency: data.currency,
 					amount: data.amount,
 					createTime: firestore.FieldValue.serverTimestamp(),
@@ -138,9 +112,7 @@ export default class TransactionController {
 				}
 				transaction.set(tran.ref, { isConfirmed: true })
 				transaction.set(from, { amount: fromAmount })
-				transaction.set(to, { amount: toAmount })
 				transaction.set(fromTransactionRef, fromTransaction)
-				transaction.set(toTransactionRef, toTransaction)
 			})
 			return result
 		} catch (error) {

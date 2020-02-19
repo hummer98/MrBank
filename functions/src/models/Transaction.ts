@@ -2,10 +2,11 @@ import { firestore } from 'firebase-admin'
 import { Currency } from '../util/Currency'
 import { ShardType } from '../util/Shard'
 
-export interface Transaction {
+export type TransactionType = 'deposit' | 'transfer' | 'withdraw' | 'interest'
+
+export interface _Transaction {
 	shard: ShardType
-	from: string
-	to: string
+	type: TransactionType
 	currency: Currency
 	amount: number
 	createTime: firestore.Timestamp | firestore.FieldValue
