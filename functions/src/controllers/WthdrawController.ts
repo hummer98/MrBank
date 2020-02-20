@@ -50,7 +50,7 @@ export default class TransactionController {
 					isConfirmed: false,
 					expireTime: firestore.Timestamp.fromDate(expire)
 				}
-				transaction.set(transactionRef, documentData)
+				transaction.set(transactionRef, documentData, { merge: true })
 			})
 			return transactionRef.id
 		} catch (error) {
@@ -115,9 +115,9 @@ export default class TransactionController {
 					createTime: firestore.FieldValue.serverTimestamp(),
 					updateTime: firestore.FieldValue.serverTimestamp()
 				}
-				transaction.set(tran.ref, { isConfirmed: true })
-				transaction.set(from, { amount: fromAmount })
-				transaction.set(fromTransactionRef, fromTransaction)
+				transaction.set(tran.ref, { isConfirmed: true }, { merge: true })
+				transaction.set(from, { amount: fromAmount }, { merge: true })
+				transaction.set(fromTransactionRef, fromTransaction, { merge: true })
 			})
 			return result
 		} catch (error) {

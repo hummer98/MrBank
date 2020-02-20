@@ -91,9 +91,9 @@ export default class TransactionController {
 					createTime: firestore.FieldValue.serverTimestamp(),
 					updateTime: firestore.FieldValue.serverTimestamp()
 				}
-				transaction.set(tran.ref, { isConfirmed: true })
-				transaction.set(to, { amount: toAmount })
-				transaction.set(toTransactionRef, toTransaction)
+				transaction.set(tran.ref, { isConfirmed: true }, { merge: true })
+				transaction.set(to, { amount: toAmount }, { merge: true })
+				transaction.set(toTransactionRef, toTransaction, { merge: true })
 			})
 			return result
 		} catch (error) {
