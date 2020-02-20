@@ -1,8 +1,9 @@
 import { firestore } from 'firebase-admin'
 import * as Transfer from '../models/Transfer'
-import { TransactionType } from '../models/Transaction'
+import { TransactionType } from '../models/Core'
 import { AccountConfiguration } from '../models/AccountConfiguration'
 import { ShardType, randomShard, DafaultShardCharacters } from '../util/Shard'
+import { getTransactionRef } from './helper'
 import * as Dayjs from 'dayjs'
 
 const system = () => firestore().collection('account').doc('v1')
@@ -14,9 +15,11 @@ export default class TransactionController {
 		const transactionRef = system().collection('transactions').doc()
 		const fromRef = system().collection('accounts').doc(data.from)
 		const toRef = system().collection('accounts').doc(data.to)
-		const timestamp = firestore.Timestamp.now()
-		const dayjs = Dayjs(timestamp.toDate())
-		const expire = dayjs.add(3, 'minute').toDate()
+		const now = Dayjs(firestore.Timestamp.now().toDate())
+		const year = now.year()
+		const month = now.month()
+		const date = now.date()
+		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
@@ -52,6 +55,7 @@ export default class TransactionController {
 				}
 				const documentData: Transfer.Authorization = {
 					...data,
+					year, month, date,
 					shard,
 					toShardCharacters: toShardCharcters,
 					isConfirmed: true,
@@ -67,36 +71,32 @@ export default class TransactionController {
 
 	static async confirm(id: string) {
 		const ref = system().collection('transactions').doc(id)
-		const tran = await ref.get()
-		if (!tran) {
-			throw new Error(`This transaction is not available. uid: ${ref.id}`)
-		}
-		const data = tran.data() as Transfer.Authorization | undefined
-		if (!data) {
-			throw new Error(`This transaction is not data. uid: ${ref.id}`)
-		}
 		const type: TransactionType = 'transfer'
-		const amount = data.amount
-		const toShardCharacters = data.toShardCharacters
-		const timestamp = firestore.Timestamp.now()
-		const dayjs = Dayjs(timestamp.toDate())
-		const year = dayjs.year()
-		const month = dayjs.month()
-		const date = dayjs.date()
-		const fromRef = system().collection('accounts').doc(data.from)
-		const toRef = system().collection('accounts').doc(data.to)
-		const fromTransactionRef = fromRef
-			.collection('years').doc(`${year}`)
-			.collection('months').doc(`${year}-${month}`)
-			.collection('days').doc(`${year}-${month}-${date}`)
-			.collection('transactions').doc(ref.id)
-		const toTransactionRef = toRef
-			.collection('years').doc(`${year}`)
-			.collection('months').doc(`${year}-${month}`)
-			.collection('days').doc(`${year}-${month}-${date}`)
-			.collection('transactions').doc(ref.id)
 		try {
 			const result = await firestore().runTransaction(async transaction => {
+				const tran = await transaction.get(ref)
+				if (!tran) {
+					throw new Error(`This transaction is not available. id: ${ref.id}`)
+				}
+				const data = tran.data() as Transfer.Authorization | undefined
+				if (!data) {
+					throw new Error(`This transaction is not data. id: ${ref.id}`)
+				}
+				if (data.isConfirmed) {
+					throw new Error(`This transaction is already confirmed. id: ${ref.id}`)
+				}
+				const amount = data.amount
+				const toShardCharacters = data.toShardCharacters
+				const timestamp = firestore.Timestamp.now()
+				const dayjs = Dayjs(timestamp.toDate())
+				const year = dayjs.year()
+				const month = dayjs.month()
+				const date = dayjs.date()
+				const fromRef = system().collection('accounts').doc(data.from)
+				const toRef = system().collection('accounts').doc(data.to)
+				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
+				const toTransactionRef = getTransactionRef(toRef, ref.id, year, month, date)
+
 				const currencyRef = fromRef.collection("balances").doc(data.currency)
 				const snapshot = await currencyRef.collection(`shards`).where('amount', '>=', 100).get()
 				if (snapshot.docs.length === 0) {

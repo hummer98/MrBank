@@ -1,8 +1,9 @@
 import { firestore } from 'firebase-admin'
 import * as Withdraw from '../models/Withdraw'
-import { TransactionType } from '../models/Transaction'
+import { TransactionType } from '../models/Core'
 import { AccountConfiguration } from '../models/AccountConfiguration'
 import { randomShard, DafaultShardCharacters } from '../util/Shard'
+import { getTransactionRef } from './helper'
 import * as Dayjs from 'dayjs'
 
 const system = () => firestore().collection('account').doc('v1')
@@ -13,9 +14,11 @@ export default class TransactionController {
 		const amount = data.amount
 		const transactionRef = system().collection('transactions').doc()
 		const fromRef = system().collection('accounts').doc(data.from)
-		const timestamp = firestore.Timestamp.now()
-		const dayjs = Dayjs(timestamp.toDate())
-		const expire = dayjs.add(3, 'minute').toDate()
+		const now = Dayjs(firestore.Timestamp.now().toDate())
+		const year = now.year()
+		const month = now.month()
+		const date = now.date()
+		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
 		const fromConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.from).get()
 		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
@@ -41,6 +44,7 @@ export default class TransactionController {
 				}
 				const documentData: Withdraw.Authorization = {
 					...data,
+					year, month, date,
 					shard,
 					fromShardCharacters: fromShardCharacters,
 					isConfirmed: true,
@@ -56,30 +60,31 @@ export default class TransactionController {
 
 	static async confirm(id: string) {
 		const ref = system().collection('transactions').doc(id)
-		const tran = await ref.get()
-		if (!tran) {
-			throw new Error(`This transaction is not available. uid: ${ref.id}`)
-		}
-		const data = tran.data() as Withdraw.Authorization | undefined
-		if (!data) {
-			throw new Error(`This transaction is not data. uid: ${ref.id}`)
-		}
 		const type: TransactionType = 'withdraw'
-		const amount = data.amount
-		const fromShardCharacters = data.fromShardCharacters
-		const timestamp = firestore.Timestamp.now()
-		const dayjs = Dayjs(timestamp.toDate())
-		const year = dayjs.year()
-		const month = dayjs.month()
-		const date = dayjs.date()
-		const fromRef = system().collection('accounts').doc(data.from)
-		const fromTransactionRef = fromRef
-			.collection('years').doc(`${year}`)
-			.collection('months').doc(`${year}-${month}`)
-			.collection('days').doc(`${year}-${month}-${date}`)
-			.collection('transactions').doc(ref.id)
+
 		try {
 			const result = await firestore().runTransaction(async transaction => {
+				const tran = await transaction.get(ref)
+				if (!tran) {
+					throw new Error(`This transaction is not available. id: ${ref.id}`)
+				}
+				const data = tran.data() as Withdraw.Authorization | undefined
+				if (!data) {
+					throw new Error(`This transaction is not data. id: ${ref.id}`)
+				}
+				if (data.isConfirmed) {
+					throw new Error(`This transaction is already confirmed. id: ${ref.id}`)
+				}
+				const amount = data.amount
+				const fromShardCharacters = data.fromShardCharacters
+				const timestamp = firestore.Timestamp.now()
+				const dayjs = Dayjs(timestamp.toDate())
+				const year = dayjs.year()
+				const month = dayjs.month()
+				const date = dayjs.date()
+				const fromRef = system().collection('accounts').doc(data.from)
+				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
+
 				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))
 				if (snapshot.docs.length === 0) {
 					throw new Error(`Out of balance. ${fromRef.path}`)

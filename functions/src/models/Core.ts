@@ -12,3 +12,14 @@ export interface _Transaction {
 	createTime: firestore.Timestamp | firestore.FieldValue
 	updateTime: firestore.Timestamp | firestore.FieldValue
 }
+
+export interface _Authorization {
+	shard: ShardType
+	currency: Currency
+	amount: number
+	year: number
+	month: number
+	date: number
+	isConfirmed: boolean
+	expireTime: firestore.Timestamp
+}

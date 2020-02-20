@@ -1,7 +1,6 @@
-import { firestore } from 'firebase-admin'
 import { Currency } from '../../util/Currency'
 import { ShardType } from '../../util/Shard'
-import { _Transaction } from '../Transaction'
+import { _Transaction, _Authorization } from '../Core'
 
 export interface Request {
 	from: string
@@ -9,14 +8,9 @@ export interface Request {
 	amount: number
 }
 
-export interface Authorization {
-	shard: ShardType
+export interface Authorization extends _Authorization {
 	from: string
 	fromShardCharacters: ShardType[]
-	currency: Currency
-	amount: number
-	isConfirmed: boolean
-	expireTime: firestore.Timestamp
 }
 
 export interface Transaction extends _Transaction {
