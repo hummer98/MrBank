@@ -58,7 +58,7 @@ export default class TransactionController {
 					year, month, date,
 					shard,
 					toShardCharacters: toShardCharcters,
-					isConfirmed: true,
+					isConfirmed: false,
 					expireTime: firestore.Timestamp.fromDate(expire)
 				}
 				transaction.set(transactionRef, documentData)
