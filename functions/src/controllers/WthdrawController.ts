@@ -80,7 +80,7 @@ export default class TransactionController {
 			.collection('transactions').doc(ref.id)
 		try {
 			const result = await firestore().runTransaction(async transaction => {
-				const snapshot = await transaction.get(fromRef.collection(data.currency))
+				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))
 				if (snapshot.docs.length > 0) {
 					throw new Error(`Out of balance. ${fromRef.path}`)
 				}

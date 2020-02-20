@@ -28,6 +28,7 @@ export const create = functions.https.onCall(async (data, context) => {
 			amount
 		}
 		const result = await TransactionController.request(request)
+		console.log(result)
 		return result
 	} catch (error) {
 		throw error

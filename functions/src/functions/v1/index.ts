@@ -4,6 +4,6 @@ import * as Deposit from './Deposit'
 import * as Withdraw from './Withdraw'
 
 export const account = { ...Account }
-export const trasfer = { ...Transfer }
+export const transfer = { ...Transfer }
 export const deposit = { ...Deposit }
 export const withdraw = { ...Withdraw }
