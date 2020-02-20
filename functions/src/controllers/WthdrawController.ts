@@ -81,7 +81,7 @@ export default class TransactionController {
 		try {
 			const result = await firestore().runTransaction(async transaction => {
 				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))
-				if (snapshot.docs.length > 0) {
+				if (snapshot.docs.length === 0) {
 					throw new Error(`Out of balance. ${fromRef.path}`)
 				}
 				const currentAmount = snapshot.docs.reduce((prev, current) => {

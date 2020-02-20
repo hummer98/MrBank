@@ -41,7 +41,7 @@ export default class TransactionController {
 				if (!toAccountData.isAvailable) {
 					throw new Error(`This account is not available. uid: ${data.to}`)
 				}
-				const snapshot = await transaction.get(fromRef.collection(data.currency))
+				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))
 				const currentAmount = snapshot.docs.reduce((prev, current) => {
 					const data = (current.data() || { amount: 0 })
 					const amount = data.amount
@@ -97,8 +97,9 @@ export default class TransactionController {
 			.collection('transactions').doc(ref.id)
 		try {
 			const result = await firestore().runTransaction(async transaction => {
-				const snapshot = await fromRef.collection("balances").doc(data.currency).collection(`shards`).where('amount', '>=', 100).get()
-				if (snapshot.docs.length > 0) {
+				const currencyRef = fromRef.collection("balances").doc(data.currency)
+				const snapshot = await currencyRef.collection(`shards`).where('amount', '>=', 100).get()
+				if (snapshot.docs.length === 0) {
 					throw new Error(`Out of balance. ${fromRef.path}`)
 				}
 				const IDs = snapshot.docs.map(doc => doc.id) as ShardType[]
@@ -106,7 +107,7 @@ export default class TransactionController {
 				// amount
 				const fromShard = randomShard(IDs)
 				const toShard = randomShard(toShardCharacters)
-				const from = fromRef.collection("balances").doc(data.currency).collection(`shards`).doc(fromShard)
+				const from = currencyRef.collection(`shards`).doc(fromShard)
 				const to = toRef.collection("balances").doc(data.currency).collection(`shards`).doc(toShard)
 				const fromSnapshot = await transaction.get(from)
 				const toSnapshot = await transaction.get(to)
