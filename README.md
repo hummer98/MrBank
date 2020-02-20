@@ -19,7 +19,7 @@ __Account__
 ```
 
 ```
-/account/v1/accounts/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+/account/v1/accounts/{uid}/years/{year}/months/{month}/dates/{date}/transactions/{transaction}
 ```
 
 __AccountConfiguration__
@@ -37,7 +37,7 @@ __Bank__
 ```
 
 ```
-/account/v1/banks/{uid}/years/{year}/months/{month}/days/{day}/transactions/{transaction}
+/account/v1/banks/{uid}/years/{year}/months/{month}/dates/{date}/transactions/{transaction}
 ```
 
 __BankConfiguration__
