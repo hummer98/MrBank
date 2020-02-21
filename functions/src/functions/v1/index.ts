@@ -1,7 +1,7 @@
-import * as Account from './Account'
-import * as Transfer from './Transfer'
-import * as Deposit from './Deposit'
-import * as Withdraw from './Withdraw'
+import * as Account from './account'
+import * as Transfer from './transfer'
+import * as Deposit from './deposit'
+import * as Withdraw from './withdraw'
 
 export const account = { ...Account }
 export const transfer = { ...Transfer }

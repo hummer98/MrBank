@@ -1,16 +1,19 @@
 import * as admin from 'firebase-admin'
-// import * as functions from 'firebase-functions'
-// import * as express from 'express'
-// import * as cors from 'cors'
-import * as func from './functions/v1'
 
 admin.initializeApp()
 
-// const app = express()
-// app.use(cors({ origin: true }))
-// app.use('/_', V1)
-
-// export const API = functions.https.onRequest(app)
-
-
-export const v1 = { ...func }
+const FUNCTION_NAME = process.env.FUNCTION_NAME
+if (FUNCTION_NAME) {
+	const names = FUNCTION_NAME.split('-')
+	const path = names.slice(0, names.length - 1).join('/')
+	const name = [...names].pop()!
+	const file = require(`./functions/${path}`)
+	const func = names.reduceRight((prev, current) => {
+		return { [current]: prev }
+	}, file[name])
+	module.exports = func
+} else {
+	const func = require('./functions/v1')
+	const v1 = { ...func }
+	module.exports = { v1 }
+}
