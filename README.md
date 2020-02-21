@@ -15,7 +15,7 @@ __Account__
 ```
 
 ```
-/account/v1/accounts/{uid}/{balances}/{currency}/{shard}
+/account/v1/accounts/{uid}/balances/{currency}/{shard}
 ```
 
 ```
@@ -33,11 +33,23 @@ __Bank__
 ```
 
 ```
-/account/v1/banks/{uid}/{currency}/{shard}
+/account/v1/banks/{uid}/years/{year}/months/{month}/dates/{date}/transactions/{transaction}
 ```
 
 ```
-/account/v1/banks/{uid}/years/{year}/months/{month}/dates/{date}/transactions/{transaction}
+/account/v1/banks/{uid}/years/{year}/months/{month}/dates/{date}/balances/{currency}
+```
+
+```
+/account/v1/banks/{uid}/years/{year}/months/{month}/balances/{currency}
+```
+
+```
+/account/v1/banks/{uid}/years/{year}/balances/{currency}
+```
+
+```
+/account/v1/banks/{uid}/balances/{currency}
 ```
 
 __BankConfiguration__
