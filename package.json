@@ -12,7 +12,8 @@
 		"copy-deps": "cpx \"*{package.json,package-lock.json,yarn.lock}\" \"dist\" -C",
 		"install-deps": "cd \"dist\" && npm i",
 		"emulate": "firebase emulators:start",
-		"test": "firebase emulators:exec jest"
+		"test": "firebase emulators:exec jest",
+		"test:stress": "firebase emulators:exec \"jest ./functions/tests/stress\""
 	},
 	"engines": {
 		"node": "10"
