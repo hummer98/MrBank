@@ -1,12 +1,9 @@
-import { Currency } from '../../util/Currency'
 import { ShardType } from '../../util/Shard'
-import { _Transaction, _Authorization } from '../Core'
+import { _Request, _Transaction, _Authorization } from '../Core'
 
-export interface Request {
+export interface Request extends _Request {
 	from: string
 	to: string
-	currency: Currency
-	amount: number
 }
 
 export interface Authorization extends _Authorization {

@@ -4,6 +4,11 @@ import { ShardType } from '../util/Shard'
 
 export type TransactionType = 'deposit' | 'transfer' | 'withdraw' | 'interest'
 
+export interface _Request {
+	currency: Currency
+	amount: number
+}
+
 export interface _Transaction {
 	shard: ShardType
 	type: TransactionType

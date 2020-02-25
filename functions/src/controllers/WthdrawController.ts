@@ -33,12 +33,13 @@ export default class TransactionController {
 				if (!fromAccountData.isAvailable) {
 					throw new Error(`This account is not available. uid: ${data.from}`)
 				}
-				const snapshot = await transaction.get(fromRef.collection(data.currency))
+				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection('shards'))
 				const currentAmount = snapshot.docs.reduce((prev, current) => {
 					const data = (current.data() || { amount: 0 })
 					const amount = data.amount
 					return prev + amount
 				}, 0)
+				console.log(currentAmount, amount)
 				if (currentAmount < amount) {
 					throw new Error(`Out of balance. ${currentAmount}`)
 				}
