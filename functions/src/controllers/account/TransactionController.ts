@@ -1,27 +1,25 @@
 import { firestore } from 'firebase-admin'
-import * as Transfer from '../models/Transfer'
-import { TransactionType } from '../models/Core'
-import { AccountConfiguration } from '../models/AccountConfiguration'
-import { ShardType, randomShard, DafaultShardCharacters } from '../util/Shard'
-import { getTransactionRef } from './helper'
+import * as Transfer from '../../models/Transfer'
+import { TransactionType } from '../../models/Core'
+import { AccountConfiguration } from '../../models/AccountConfiguration'
+import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard'
+import { rootRef, getTransactionRef } from '../helper'
 import * as Dayjs from 'dayjs'
-
-const system = () => firestore().collection('account').doc('v1')
 
 export default class TransactionController {
 
 	static async request<Request extends Transfer.Request>(data: Request) {
 		const amount = data.amount
-		const transactionRef = system().collection('transactions').doc()
-		const fromRef = system().collection('accounts').doc(data.from)
-		const toRef = system().collection('accounts').doc(data.to)
+		const transactionRef = rootRef().collection('transactions').doc()
+		const fromRef = rootRef().collection('accounts').doc(data.from)
+		const toRef = rootRef().collection('accounts').doc(data.to)
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
 		const date = now.date()
 		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const toConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.to).get()
+		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
 		const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
 		try {
@@ -70,7 +68,7 @@ export default class TransactionController {
 	}
 
 	static async confirm(id: string) {
-		const ref = system().collection('transactions').doc(id)
+		const ref = rootRef().collection('transactions').doc(id)
 		const type: TransactionType = 'transfer'
 		try {
 			const result = await firestore().runTransaction(async transaction => {
@@ -92,8 +90,8 @@ export default class TransactionController {
 				const year = dayjs.year()
 				const month = dayjs.month()
 				const date = dayjs.date()
-				const fromRef = system().collection('accounts').doc(data.from)
-				const toRef = system().collection('accounts').doc(data.to)
+				const fromRef = rootRef().collection('accounts').doc(data.from)
+				const toRef = rootRef().collection('accounts').doc(data.to)
 				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
 				const toTransactionRef = getTransactionRef(toRef, ref.id, year, month, date)
 

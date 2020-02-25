@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions'
-import DepositController from '../../controllers/DepositController'
+import DepositController from '../../controllers/account/DepositController'
 import * as Deposit from '../../models/Deposit'
 
 export const create = functions.https.onCall(async (data, context) => {

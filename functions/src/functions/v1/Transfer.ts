@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions'
-import TransactionController from '../../controllers/TransactionController'
+import TransactionController from '../../controllers/account/TransactionController'
 import * as Transfer from '../../models/Transfer'
 
 export const create = functions.https.onCall(async (data, context) => {

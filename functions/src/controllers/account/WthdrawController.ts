@@ -1,26 +1,24 @@
 import { firestore } from 'firebase-admin'
-import * as Withdraw from '../models/Withdraw'
-import { TransactionType } from '../models/Core'
-import { AccountConfiguration } from '../models/AccountConfiguration'
-import { randomShard, DafaultShardCharacters } from '../util/Shard'
-import { getTransactionRef } from './helper'
+import * as Withdraw from '../../models/Withdraw'
+import { TransactionType } from '../../models/Core'
+import { AccountConfiguration } from '../../models/AccountConfiguration'
+import { randomShard, DafaultShardCharacters } from '../../util/Shard'
+import { rootRef, getTransactionRef } from '../helper'
 import * as Dayjs from 'dayjs'
 
-const system = () => firestore().collection('account').doc('v1')
-
-export default class TransactionController {
+export default class WithdrawController {
 
 	static async request<Request extends Withdraw.Request>(data: Request) {
 		const amount = data.amount
-		const transactionRef = system().collection('transactions').doc()
-		const fromRef = system().collection('accounts').doc(data.from)
+		const transactionRef = rootRef().collection('transactions').doc()
+		const fromRef = rootRef().collection('accounts').doc(data.from)
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
 		const date = now.date()
 		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const fromConfigurationSnapshot = await system().collection('accountConfigurations').doc(data.from).get()
+		const fromConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.from).get()
 		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
 		const fromShardCharacters = fromConfiguration?.shardhardCharacters || DafaultShardCharacters
 		try {
@@ -60,7 +58,7 @@ export default class TransactionController {
 	}
 
 	static async confirm(id: string) {
-		const ref = system().collection('transactions').doc(id)
+		const ref = rootRef().collection('transactions').doc(id)
 		const type: TransactionType = 'withdraw'
 
 		try {
@@ -83,7 +81,7 @@ export default class TransactionController {
 				const year = dayjs.year()
 				const month = dayjs.month()
 				const date = dayjs.date()
-				const fromRef = system().collection('accounts').doc(data.from)
+				const fromRef = rootRef().collection('accounts').doc(data.from)
 				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
 
 				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))

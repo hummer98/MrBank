@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions'
-import WthdrawController from '../../controllers/WthdrawController'
+import WthdrawController from '../../controllers/account/WthdrawController'
 import * as Withdraw from '../../models/Withdraw'
 
 export const create = functions.https.onCall(async (data, context) => {
