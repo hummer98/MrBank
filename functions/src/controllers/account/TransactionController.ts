@@ -140,6 +140,13 @@ export default class TransactionController {
 				transaction.set(to, { amount: toAmount }, { merge: true })
 				transaction.set(fromTransactionRef, fromTransaction)
 				transaction.set(toTransactionRef, toTransaction)
+				return {
+					type,
+					from: data.from,
+					to: data.to,
+					currency: data.currency,
+					amount: data.amount
+				}
 			})
 			return result
 		} catch (error) {
