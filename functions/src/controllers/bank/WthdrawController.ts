@@ -1,7 +1,7 @@
 import { firestore } from 'firebase-admin'
 import * as Withdraw from '../../models/Withdraw'
 import { TransactionType } from '../../models/Core'
-import { AccountConfiguration } from '../../models/AccountConfiguration'
+import { Configuration } from '../../models/Configuration'
 import { randomShard, DafaultShardCharacters } from '../../util/Shard'
 import { rootRef, getTransactionRef } from '../helper'
 import * as Dayjs from 'dayjs'
@@ -18,8 +18,8 @@ export default class WithdrawController {
 		const date = now.date()
 		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const fromConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.from).get()
-		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
+		const fromConfigurationSnapshot = await rootRef().collection('configurations').doc(data.from).get()
+		const fromConfiguration = fromConfigurationSnapshot.data() as Configuration | undefined
 		const fromShardCharacters = fromConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {

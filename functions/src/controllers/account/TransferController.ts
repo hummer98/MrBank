@@ -1,7 +1,7 @@
 import { firestore } from 'firebase-admin'
 import * as Transfer from '../../models/Transfer'
 import { TransactionType } from '../../models/Core'
-import { AccountConfiguration } from '../../models/AccountConfiguration'
+import { Configuration } from '../../models/Configuration'
 import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard'
 import { rootRef, getTransactionRef } from '../helper'
 import { DEFAULT_EXPIRE_TIME } from '../../config'
@@ -21,8 +21,8 @@ export default class TransferController {
 		const date = now.date()
 		const expire = now.add(DEFAULT_EXPIRE_TIME, 'second').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
-		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
+		const toConfigurationSnapshot = await rootRef().collection('configurations').doc(data.to).get()
+		const toConfiguration = toConfigurationSnapshot.data() as Configuration | undefined
 		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {

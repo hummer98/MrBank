@@ -57,7 +57,7 @@ describe("Firestore triggerd test", () => {
 			createTime: admin.firestore.FieldValue.serverTimestamp(),
 			updateTime: admin.firestore.FieldValue.serverTimestamp()
 		})
-		await accountRef.collection('accountConfigurations').doc('user_target').set({
+		await accountRef.collection('configurations').doc('user_target').set({
 			shardCharacters: ShardCharacters.slice(0, 20)
 		})
 	}, 10000)

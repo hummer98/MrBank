@@ -1,7 +1,7 @@
 import { firestore } from 'firebase-admin'
 import { TransactionType } from '../../models/Core'
 import * as Deposit from '../../models/Deposit'
-import { AccountConfiguration } from '../../models/AccountConfiguration'
+import { Configuration } from '../../models/Configuration'
 import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard'
 import { rootRef, getTransactionRef } from '../helper'
 import * as Dayjs from 'dayjs'
@@ -17,8 +17,8 @@ export default class DepositController {
 		const date = now.date()
 		const expire = now.add(3, 'minute').toDate()
 		const shard = randomShard(DafaultShardCharacters)
-		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
-		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
+		const toConfigurationSnapshot = await rootRef().collection('configurations').doc(data.to).get()
+		const toConfiguration = toConfigurationSnapshot.data() as Configuration | undefined
 		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {

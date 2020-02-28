@@ -1,5 +1,5 @@
 import { ShardType } from '../util/Shard'
 
-export interface AccountConfiguration {
+export interface Configuration {
 	shardCharacters: ShardType[]
 }

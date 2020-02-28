@@ -22,9 +22,9 @@ __Account__
 /account/v1/accounts/{uid}/years/{year}/months/{month}/dates/{date}/transactions/{transaction}
 ```
 
-__AccountConfiguration__
+__Configuration__
 ```
-/account/v1/accountConfigurations/{uid}
+/account/v1/configurations/{uid}
 ```
 
 
