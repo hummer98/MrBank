@@ -5,6 +5,7 @@ import * as V1 from '../../src/functions/v1'
 // import * as functions from "firebase-functions"
 import * as Deposit from '../../src/models/Deposit'
 import * as Transfer from '../../src/models/Transfer'
+import { ShardCharacters } from '../../src/util/Shard'
 
 // admin.initializeApp(functions.config().firebase)
 const serviceAccount = require('../../../secret.json')
@@ -17,10 +18,12 @@ const accountRef = admin.firestore().collection('account').doc('v1')
 
 describe("Firestore triggerd test", () => {
 
+	const numberOfTestUser = 100
+
 	beforeAll(async () => {
 
 		const tasks = []
-		for (let i = 0; i < 50; i++) {
+		for (let i = 0; i < numberOfTestUser; i++) {
 			const task = async () => {
 				const userID = `user_${i}`
 				await accountRef.collection('accounts').doc(userID).set({
@@ -54,12 +57,15 @@ describe("Firestore triggerd test", () => {
 			createTime: admin.firestore.FieldValue.serverTimestamp(),
 			updateTime: admin.firestore.FieldValue.serverTimestamp()
 		})
+		await accountRef.collection('accountConfigurations').doc('user_target').set({
+			shardCharacters: ShardCharacters.slice(0, 20)
+		})
 	}, 10000)
 
 	describe("Transfer", () => {
 		beforeAll(async () => {
 			const tasks = []
-			for (let i = 0; i < 50; i++) {
+			for (let i = 0; i < numberOfTestUser; i++) {
 				const task = async () => {
 					const userID = `user_${i}`
 					const request: Transfer.Request = {
@@ -73,23 +79,20 @@ describe("Firestore triggerd test", () => {
 							uid: userID
 						}
 					})
-					console.log('request result ', result)
-					const confirm = await V1.transfer.confirm.run({ id: result }, {
+					await V1.transfer.confirm.run({ id: result }, {
 						auth: {
 							uid: userID
 						}
 					})
-					console.log('confirm result', confirm)
 				}
 				tasks.push(task())
 			}
-			const result = await Promise.all(tasks)
-			console.log(result)
+			await Promise.all(tasks)
 		}, 1000000)
 
-		test("Transfer ", async () => {
+		test("user who transfer ", async () => {
 			const tasks = []
-			for (let i = 0; i < 50; i++) {
+			for (let i = 0; i < numberOfTestUser; i++) {
 				const task = async () => {
 					const userID = `user_${i}`
 					const snapshot = await accountRef.collection('accounts').doc(userID).collection('balances').doc('JPY').collection('shards').get()
@@ -97,13 +100,26 @@ describe("Firestore triggerd test", () => {
 						return prev + current.data()!.amount
 					}, 0)
 					expect(amount).toEqual(0)
+					if (amount > 0) {
+						console.log(userID, amount)
+					}
 				}
 				tasks.push(task())
 			}
-			const result = await Promise.all(tasks)
-			console.log(result)
+			await Promise.all(tasks)
 		})
+	})
 
+	test("target ", async () => {
+		const userID = `user_target`
+		const snapshot = await accountRef.collection('accounts').doc(userID).collection('balances').doc('JPY').collection('shards').get()
+		const amount = snapshot.docs.reduce((prev, current) => {
+			return prev + current.data()!.amount
+		}, 0)
+		expect(amount).toEqual(10000)
+		if (amount > 0) {
+			console.log(userID, amount)
+		}
 	})
 
 	afterAll(async () => {

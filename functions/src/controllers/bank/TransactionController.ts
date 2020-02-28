@@ -21,7 +21,7 @@ export default class TransactionController {
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
 				const [fromAccount, toAccount] = await Promise.all([

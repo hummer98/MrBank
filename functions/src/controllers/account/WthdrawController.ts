@@ -10,8 +10,8 @@ export default class WithdrawController {
 
 	static async request<Request extends Withdraw.Request>(data: Request) {
 		const amount = data.amount
-		const transactionRef = rootRef().collection('transactions').doc()
 		const fromRef = rootRef().collection('accounts').doc(data.from)
+		const transactionRef = fromRef.collection('authorizations').doc()
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
@@ -20,7 +20,7 @@ export default class WithdrawController {
 		const shard = randomShard(DafaultShardCharacters)
 		const fromConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.from).get()
 		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const fromShardCharacters = fromConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const fromShardCharacters = fromConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
 				const fromAccount = await transaction.get(fromRef)
@@ -57,10 +57,10 @@ export default class WithdrawController {
 		}
 	}
 
-	static async confirm(id: string) {
-		const ref = rootRef().collection('transactions').doc(id)
+	static async confirm(from: string, authorizationID: string) {
+		const fromRef = rootRef().collection('accounts').doc(from)
+		const ref = fromRef.collection('authorizations').doc(authorizationID)
 		const type: TransactionType = 'withdraw'
-
 		try {
 			const result = await firestore().runTransaction(async transaction => {
 				const tran = await transaction.get(ref)
@@ -81,7 +81,6 @@ export default class WithdrawController {
 				const year = dayjs.year()
 				const month = dayjs.month()
 				const date = dayjs.date()
-				const fromRef = rootRef().collection('accounts').doc(data.from)
 				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
 
 				const snapshot = await transaction.get(fromRef.collection("balances").doc(data.currency).collection(`shards`))

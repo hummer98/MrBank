@@ -9,8 +9,8 @@ import * as Dayjs from 'dayjs'
 export default class DepositController {
 
 	static async request<Request extends Deposit.Request>(data: Request) {
-		const transactionRef = rootRef().collection('transactions').doc()
 		const toRef = rootRef().collection('accounts').doc(data.to)
+		const transactionRef = toRef.collection('authorizations').doc()
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
@@ -19,7 +19,7 @@ export default class DepositController {
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
 				const toAccount = await transaction.get(toRef)
@@ -46,8 +46,9 @@ export default class DepositController {
 		}
 	}
 
-	static async confirm(id: string) {
-		const ref = rootRef().collection('transactions').doc(id)
+	static async confirm(to: string, authorizationID: string) {
+		const toRef = rootRef().collection('accounts').doc(to)
+		const ref = toRef.collection('authorizations').doc(authorizationID)
 		const type: TransactionType = 'deposit'
 		try {
 			const result = await firestore().runTransaction(async transaction => {
@@ -69,7 +70,6 @@ export default class DepositController {
 				const year = dayjs.year()
 				const month = dayjs.month()
 				const date = dayjs.date()
-				const toRef = rootRef().collection('accounts').doc(data.to)
 				const toTransactionRef = getTransactionRef(toRef, ref.id, year, month, date)
 
 				// amount

@@ -13,6 +13,7 @@
 		"install-deps": "cd \"dist\" && npm i",
 		"emulate": "firebase emulators:start",
 		"test": "firebase emulators:exec jest",
+		"test:index": "firebase emulators:exec \"jest ./functions/tests/index\"",
 		"test:stress": "firebase emulators:exec \"jest ./functions/tests/stress\""
 	},
 	"engines": {

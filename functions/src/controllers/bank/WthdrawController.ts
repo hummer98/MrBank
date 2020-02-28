@@ -20,7 +20,7 @@ export default class WithdrawController {
 		const shard = randomShard(DafaultShardCharacters)
 		const fromConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.from).get()
 		const fromConfiguration = fromConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const fromShardCharacters = fromConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const fromShardCharacters = fromConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
 				const fromAccount = await transaction.get(fromRef)

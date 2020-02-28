@@ -6,12 +6,12 @@ import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard
 import { rootRef, getTransactionRef } from '../helper'
 import * as Dayjs from 'dayjs'
 
-export default class TransactionController {
+export default class TransferController {
 
 	static async request<Request extends Transfer.Request>(data: Request) {
 		const amount = data.amount
-		const transactionRef = rootRef().collection('transactions').doc()
 		const fromRef = rootRef().collection('accounts').doc(data.from)
+		const transactionRef = fromRef.collection('authorizations').doc()
 		const toRef = rootRef().collection('accounts').doc(data.to)
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
@@ -21,7 +21,7 @@ export default class TransactionController {
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
-		const toShardCharcters = toConfiguration?.shardhardCharacters || DafaultShardCharacters
+		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
 				const [fromAccount, toAccount] = await Promise.all([
@@ -67,8 +67,9 @@ export default class TransactionController {
 		}
 	}
 
-	static async confirm(id: string) {
-		const ref = rootRef().collection('transactions').doc(id)
+	static async confirm(from: string, authorizationID: string) {
+		const fromRef = rootRef().collection('accounts').doc(from)
+		const ref = fromRef.collection('authorizations').doc(authorizationID)
 		const type: TransactionType = 'transfer'
 		try {
 			const result = await firestore().runTransaction(async transaction => {
@@ -90,11 +91,9 @@ export default class TransactionController {
 				const year = dayjs.year()
 				const month = dayjs.month()
 				const date = dayjs.date()
-				const fromRef = rootRef().collection('accounts').doc(data.from)
 				const toRef = rootRef().collection('accounts').doc(data.to)
 				const fromTransactionRef = getTransactionRef(fromRef, ref.id, year, month, date)
 				const toTransactionRef = getTransactionRef(toRef, ref.id, year, month, date)
-
 				const currencyRef = fromRef.collection("balances").doc(data.currency)
 				const snapshot = await currencyRef.collection(`shards`).where('amount', '>=', 100).get()
 				if (snapshot.docs.length === 0) {

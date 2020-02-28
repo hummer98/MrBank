@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin'
-import * as v1 from './functions/v1'
+import * as func from './functions/v1'
 
 admin.initializeApp()
-
-export { v1 }
+export const v1 = {
+	...func
+}

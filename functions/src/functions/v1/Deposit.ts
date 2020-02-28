@@ -7,10 +7,8 @@ export const create = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.')
 	}
 	console.log(context)
-	const { to, currency, amount }: Partial<Deposit.Request> = data
-	if (!to) {
-		throw new functions.https.HttpsError('invalid-argument', 'The function requires `to`.')
-	}
+	const to = context.auth.uid
+	const { currency, amount }: Partial<Deposit.Request> = data
 	if (!currency) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function requires `currency`.')
 	}
@@ -38,12 +36,13 @@ export const confirm = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.')
 	}
 	console.log(context)
+	const to = context.auth.uid
 	const id = data.id
 	if (!id) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function requires `id`.')
 	}
 	try {
-		const result = await DepositController.confirm(id)
+		const result = await DepositController.confirm(to, id)
 		return result
 	} catch (error) {
 		throw error

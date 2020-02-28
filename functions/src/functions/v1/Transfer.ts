@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions'
-import TransactionController from '../../controllers/account/TransactionController'
+import TransferController from '../../controllers/account/TransferController'
 import * as Transfer from '../../models/Transfer'
 
 export const create = functions.https.onCall(async (data, context) => {
@@ -7,9 +7,10 @@ export const create = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.')
 	}
 	console.log(context)
-	const { from, to, currency, amount }: Partial<Transfer.Request> = data
-	if (!from || !to) {
-		throw new functions.https.HttpsError('invalid-argument', 'The function requires `from` and `to`.')
+	const from = context.auth.uid
+	const { to, currency, amount }: Partial<Transfer.Request> = data
+	if (!to) {
+		throw new functions.https.HttpsError('invalid-argument', 'The function requires to`.')
 	}
 	if (!currency) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function requires `currency`.')
@@ -27,7 +28,7 @@ export const create = functions.https.onCall(async (data, context) => {
 			currency,
 			amount
 		}
-		const result = await TransactionController.request(request)
+		const result = await TransferController.request(request)
 		return result
 	} catch (error) {
 		throw error
@@ -39,12 +40,13 @@ export const confirm = functions.https.onCall(async (data, context) => {
 		throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.')
 	}
 	console.log(context)
+	const from = context.auth.uid
 	const id = data.id
 	if (!id) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function requires `id`.')
 	}
 	try {
-		const result = await TransactionController.confirm(id)
+		const result = await TransferController.confirm(from, id)
 		return result
 	} catch (error) {
 		throw error
