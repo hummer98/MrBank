@@ -94,9 +94,11 @@ export default class TransferController {
 				if (data.isConfirmed) {
 					throw new Error(`This transaction is already confirmed. id: ${ref.id}`)
 				}
-				const amount = data.amount
-				const toShardCharacters = data.toShardCharacters
+				const { expireTime, amount, toShardCharacters } = data
 				const timestamp = firestore.Timestamp.now()
+				if (expireTime.toDate() < timestamp.toDate()) {
+					throw new Error(`This request has expired. id: ${ref.id}`)
+				}
 				const dayjs = Dayjs(timestamp.toDate())
 				const year = dayjs.year()
 				const month = dayjs.month()
