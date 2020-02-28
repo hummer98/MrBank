@@ -4,18 +4,20 @@ import * as Deposit from '../../models/Deposit'
 import { AccountConfiguration } from '../../models/AccountConfiguration'
 import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard'
 import { rootRef, getTransactionRef } from '../helper'
+import { DEFAULT_EXPIRE_TIME } from '../../config'
 import * as Dayjs from 'dayjs'
 
 export default class DepositController {
 
 	static async request<Request extends Deposit.Request>(data: Request) {
 		const toRef = rootRef().collection('accounts').doc(data.to)
-		const transactionRef = toRef.collection('authorizations').doc()
+		const authorizationCollectionRef = toRef.collection('authorizations')
+		const transactionRef = authorizationCollectionRef.doc()
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
 		const date = now.date()
-		const expire = now.add(3, 'minute').toDate()
+		const expire = now.add(DEFAULT_EXPIRE_TIME, 'second').toDate()
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined

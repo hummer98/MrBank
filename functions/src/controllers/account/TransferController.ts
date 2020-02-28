@@ -4,6 +4,7 @@ import { TransactionType } from '../../models/Core'
 import { AccountConfiguration } from '../../models/AccountConfiguration'
 import { ShardType, randomShard, DafaultShardCharacters } from '../../util/Shard'
 import { rootRef, getTransactionRef } from '../helper'
+import { DEFAULT_EXPIRE_TIME } from '../../config'
 import * as Dayjs from 'dayjs'
 
 export default class TransferController {
@@ -11,23 +12,32 @@ export default class TransferController {
 	static async request<Request extends Transfer.Request>(data: Request) {
 		const amount = data.amount
 		const fromRef = rootRef().collection('accounts').doc(data.from)
-		const transactionRef = fromRef.collection('authorizations').doc()
+		const authorizationCollectionRef = fromRef.collection('authorizations')
+		const transactionRef = authorizationCollectionRef.doc()
 		const toRef = rootRef().collection('accounts').doc(data.to)
 		const now = Dayjs(firestore.Timestamp.now().toDate())
 		const year = now.year()
 		const month = now.month()
 		const date = now.date()
-		const expire = now.add(3, 'minute').toDate()
+		const expire = now.add(DEFAULT_EXPIRE_TIME, 'second').toDate()
 		const shard = randomShard(DafaultShardCharacters)
 		const toConfigurationSnapshot = await rootRef().collection('accountConfigurations').doc(data.to).get()
 		const toConfiguration = toConfigurationSnapshot.data() as AccountConfiguration | undefined
 		const toShardCharcters = toConfiguration?.shardCharacters || DafaultShardCharacters
 		try {
 			await firestore().runTransaction(async transaction => {
-				const [fromAccount, toAccount] = await Promise.all([
+				const [authorizationSnapshot, fromAccount, toAccount] = await Promise.all([
+					authorizationCollectionRef
+					.where('expireTime', '>', firestore.Timestamp.now())
+					.where('isConfirmed', '==', false)
+					.get(),
 					transaction.get(fromRef),
 					transaction.get(toRef)
 				])
+				if (authorizationSnapshot.docs.length > 0) {
+					console.log(authorizationSnapshot.docs)
+					throw new Error(`Already requested. authorization id: ${authorizationSnapshot.docs[0].ref.path}`)
+				}
 				const fromAccountData = fromAccount.data()
 				const toAccountData = toAccount.data()
 				if (!fromAccountData) {
